@@ -4,10 +4,10 @@
 #include <math.h>
 #include <string.h>
 
-#define SOFTENING 1e-9f //fattore di softening 1×10^−9 serve ad evitare valori troppo grandi
-#define DT 0.01f //delta time (tempo di simulazione) pari a 0.01 secondi
-#define SEED 42
-#define MASTER 0
+#define SOFTENING 1e-9f //Softening factor 1×10^-9 is used to avoid values that are too large
+#define DT 0.01f //delta time (simulation time) of 0.01 seconds
+#define SEED 69 //Custom seed for rand functions 
+#define MASTER 0 //Master node id
 
 #define CORRECTLY_INVOKED 1 
 #define NOT_CORRECTLY_INVOKED 0
@@ -25,7 +25,7 @@
 #define EXECUTION_TIME_NOT_REQUIRED 0
 #define NO_EXECUTION_TIME 0
 
-// Struttura dati che rappresenta la singola particella
+// Data structure representing the individual particle
 typedef struct { 
     float x, y, z, vx, vy, vz; 
 } Body;
