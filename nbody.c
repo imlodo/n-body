@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
 
     int isPrintRequired;
     if (isCorrectlyInvoked != NOT_CORRECTLY_INVOKED) {  
-        if (strcmp(argv[PRINT_ARGUMENT], "-pY") == 0) {
+        if (strcmp(argv[PRINT_ARGUMENT], "print") == 0) {
             isPrintRequired = PRINT_REQUIRED;
         } else if (strcmp(argv[PRINT_ARGUMENT], "-pN") == 0) {
             isPrintRequired = PRINT_NOT_REQUIRED;
@@ -270,10 +270,7 @@ void printBodies(Body *bodies, int numberOfBodies, int numberOfTasks, int iterat
 }
 
 void printHowToUse() {
-    printf("Per lanciare correttamente nBody eseguire: mpirun -np P nBody [-pY | -pN] B I\n");
-    printf("---> Dove P è il numero di processori\n");
-    printf("---> Dove [-pY | -pN] è pY se si desidera che i corpi vengano stampati, pN altrimenti\n");
-    printf("---> Dove B è il numero di corpi\n");
-    printf("---> Dove I è il numero di iterazioni\n");
-    printf("---> Provalo con mpirun -np 1 nBody -pY 12 3\n");
+    printf("How to use? Execute: mpirun -np processors_count nBody [print | notPrint] body_count iterations\n");
+    printf("---> Correctly example: mpirun -np 1 nBody print 12 3\n");
+    printf("---> The program execute the nBody problem with 1 processor, 12 body and 3 iterations\n");
 }
