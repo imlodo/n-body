@@ -8,17 +8,14 @@
 #define DT 0.01f //delta time (simulation time) of 0.01 seconds
 #define SEED 69 //Custom seed for rand functions 
 #define MASTER 0 //Master node id
-
 #define CORRECTLY_INVOKED 1 
 #define NOT_CORRECTLY_INVOKED 0
 #define EXPECTED_ARGUMENT 4
 #define PRINT_ARGUMENT 1
 #define NUMBER_OF_BODIES_ARGUMENT 2
 #define NUMBER_OF_ITERATIONS_ARGUMENT 3
-
 #define BODY_FLOAT 6
 #define BODY_NO_DIFFERENCE 0
-
 #define PRINT_REQUIRED 1
 #define PRINT_NOT_REQUIRED 0
 #define EXECUTION_TIME_REQUIRED 1
@@ -30,7 +27,7 @@ typedef struct {
     float x, y, z, vx, vy, vz; 
 } Body;
 
-// Dichiarazione delle funzioni
+// Declaration of functions
 void randomizeBodies(float *bodies, int numberOfBodies);
 void bodyForce(Body *bodies, float dt, int dependentStart, int dependentStop, int independentStart, int independentStop);
 void updatePositions(Body *bodies, float dt, int start, int stop);
