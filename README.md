@@ -1,7 +1,7 @@
 <header align = "center" style = "text-align: center">
-	<span><h1>Soluzione al problema n-body con MPI</h1></span>
-	Soluzione parallelizzata del problema N-Body usando MPI <br>
- MPI Download from: https://www.microsoft.com/en-us/download/details.aspx?id=57467. <br>
+	<span><h1>Soluzione al problema n-body utilizzando MPI</h1></span>
+	Soluzione parallelizzata del problema N-Body utilizzando MPI <br>
+ <h5>MPI Download from: https://www.microsoft.com/en-us/download/details.aspx?id=57467. </h5> <br>
 	<h5>
 		Antonio Lodato <br>
 		a.lodato23@studenti.unisa.it <br>
