@@ -6,14 +6,12 @@
 
 #define SOFTENING 1e-9f // Softening factor 1×10^-9 is used to avoid values that are too large
 #define DT 0.01f        // delta time (simulation time) of 0.01 seconds
-#define SEED 69         // Custom seed for rand functions
-#define MASTER 0        // Master node id
-#define CORRECTLY_INVOKED 1
-#define NOT_CORRECTLY_INVOKED 0
-#define EXPECTED_ARGUMENT 4  // Aggiornato a 4, poiché abbiamo solo 4 argomenti ora
-#define PRINT_ARGUMENT 1     // Il primo argomento passato è "print" o "notPrint"
-#define NUMBER_OF_BODIES_ARGUMENT 2  // Il secondo è il numero di corpi
-#define NUMBER_OF_ITERATIONS_ARGUMENT 3  // Il terzo è il numero di iterazioni
+#define SEED 69
+#define MASTER 0
+#define EXPECTED_ARGUMENT 4
+#define PRINT_ARGUMENT 1
+#define NUMBER_OF_BODIES_ARGUMENT 2
+#define NUMBER_OF_ITERATIONS_ARGUMENT 3
 #define BODY_FLOAT 6
 #define BODY_NO_DIFFERENCE 0
 #define PRINT_REQUIRED 1
@@ -22,13 +20,11 @@
 #define EXECUTION_TIME_NOT_REQUIRED 0
 #define NO_EXECUTION_TIME 0
 
-// Data structure representing the individual particle
 typedef struct
 {
     float x, y, z, vx, vy, vz;
 } Body;
 
-// Declaration of functions
 void randomizeBodies(float *bodies, int numberOfBodies);
 void bodyForce(Body *bodies, float dt, int dependentStart, int dependentStop, int independentStart, int independentStop);
 void updatePositions(Body *bodies, float dt, int start, int stop);
@@ -39,104 +35,66 @@ void printHowToUse();
 
 int main(int argc, char **argv)
 {
-    // Inizializzazione dell'ambiente MPI
+    int numberOfTasks, rank, isPrintRequired, numberOfBodies, iterations, bytes;
+
     MPI_Init(NULL, NULL);
-
-    int numberOfTasks, rank;
-
-    // Ottiene il numero di processi MPI realmente usati
     MPI_Comm_size(MPI_COMM_WORLD, &numberOfTasks);
-
-    // Ottiene il rank del processo
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    // Gestione dei parametri di input
-    // Arresta l'esecuzione se non sono forniti correttamente
-    int isCorrectlyInvoked = CORRECTLY_INVOKED;
-    if (argc != EXPECTED_ARGUMENT)
-    {
-        isCorrectlyInvoked = NOT_CORRECTLY_INVOKED;
-    }
-
-    int isPrintRequired;
-    if (isCorrectlyInvoked != NOT_CORRECTLY_INVOKED)
-    {
-        if (strcmp(argv[PRINT_ARGUMENT], "print") == 0)
-        {
-            isPrintRequired = PRINT_REQUIRED;
-        }
-        else if (strcmp(argv[PRINT_ARGUMENT], "notPrint") == 0)
-        {
-            isPrintRequired = PRINT_NOT_REQUIRED;
-        }
-        else
-        {
-            isCorrectlyInvoked = NOT_CORRECTLY_INVOKED;
-        }
-    }
-
-    if (isCorrectlyInvoked == NOT_CORRECTLY_INVOKED)
+    if (argc != EXPECTED_ARGUMENT ||
+        (strcmp(argv[PRINT_ARGUMENT], "print") != 0 && strcmp(argv[PRINT_ARGUMENT], "notPrint") != 0))
     {
         if (rank == MASTER)
         {
             printHowToUse();
         }
-
         MPI_Finalize();
-
-        return 0;
+        return -1;
     }
 
-    int numberOfBodies = atoi(argv[NUMBER_OF_BODIES_ARGUMENT]);
-    int iterations = atoi(argv[NUMBER_OF_ITERATIONS_ARGUMENT]);
+    isPrintRequired = (strcmp(argv[PRINT_ARGUMENT], "print") == 0) ? PRINT_REQUIRED : PRINT_NOT_REQUIRED;
+    numberOfBodies = atoi(argv[NUMBER_OF_BODIES_ARGUMENT]);
+    iterations = atoi(argv[NUMBER_OF_ITERATIONS_ARGUMENT]);
     srand(SEED);
-
-    // Inizializzazione casuale dei corpi
-    int bytes = numberOfBodies * sizeof(Body);
+    bytes = numberOfBodies * sizeof(Body);
     float *buffer = (float *)malloc(bytes);
     Body *bodies = (Body *)buffer;
+
     if (rank == MASTER)
     {
         randomizeBodies(buffer, BODY_FLOAT * numberOfBodies);
-
         printTimeAndBodies(bodies, numberOfBodies, numberOfTasks, iterations,
                            NO_EXECUTION_TIME, EXECUTION_TIME_NOT_REQUIRED, isPrintRequired);
     }
 
-    // Creazione del datatype MPI custom per i corpi
     MPI_Datatype MPI_BODY;
     MPI_Datatype oldTypes[1] = {MPI_FLOAT};
     int blocksCount[1] = {BODY_FLOAT};
     MPI_Aint offset[1] = {0};
     MPI_Type_create_struct(1, blocksCount, offset, oldTypes, &MPI_BODY);
     MPI_Type_commit(&MPI_BODY);
-
-    // Contiene il numero di corpi da inviare a ciascuno dei processi
-    // e gli spostamenti dove inizia ciascun segmento.
     int *bodiesPerProcess = (int *)malloc(numberOfTasks * sizeof(int));
     int *displs = (int *)malloc(numberOfTasks * sizeof(int));
     buildBodiesPerProcessAndDispls(numberOfBodies, numberOfTasks, bodiesPerProcess, displs);
     MPI_Request request = MPI_REQUEST_NULL;
     MPI_Request *requests = (MPI_Request *)malloc(numberOfTasks * sizeof(MPI_Request));
+
     if (requests == NULL)
     {
         fprintf(stderr, "Failed to allocate memory for MPI requests.\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
         return -1;
     }
-    MPI_Status status;
 
+    MPI_Status status;
     MPI_Barrier(MPI_COMM_WORLD);
     int startTime = MPI_Wtime();
-
-    // Scatter dei dati
     Body *recvBuffer = (Body *)malloc(bodiesPerProcess[rank] * sizeof(Body));
     MPI_Scatterv(bodies, bodiesPerProcess, displs, MPI_BODY, recvBuffer,
-                bodiesPerProcess[rank], MPI_BODY, MASTER, MPI_COMM_WORLD);
+                 bodiesPerProcess[rank], MPI_BODY, MASTER, MPI_COMM_WORLD);
     memcpy(&bodies[displs[rank]], recvBuffer, bodiesPerProcess[rank] * sizeof(Body));
     free(recvBuffer);
 
-    // Calcola per il numero di iterazioni richieste
     for (int iteration = 0; iteration < iterations; iteration++)
     {
         for (int process = MASTER; process < numberOfTasks; process++)
@@ -145,7 +103,7 @@ int main(int argc, char **argv)
                        MPI_BODY, process, MPI_COMM_WORLD, &requests[process]);
         }
 
-        // Ogni processo calcola la propria parte di corpi
+        // Each process computes its share of bodies
         int independentStop = displs[rank] + bodiesPerProcess[rank];
         bodyForce(bodies, DT, displs[rank], independentStop, displs[rank], independentStop);
 
@@ -153,30 +111,26 @@ int main(int argc, char **argv)
         {
             if (waitedProcess != rank)
             {
-                // Aspetta il processo con lo stesso rank di waitedProcess
                 MPI_Wait(&requests[waitedProcess], &status);
-
-                // Calcola sui propri particolari rispetto ai particolari
-                // del processo con lo stesso rank di waitedProcess.
                 int dependentStop = displs[waitedProcess] + bodiesPerProcess[waitedProcess];
                 bodyForce(bodies, DT, displs[waitedProcess], dependentStop, displs[rank], independentStop);
             }
         }
-
-        // Alla fine integra le posizioni
+        
         updatePositions(bodies, DT, displs[rank], independentStop);
     }
 
-    // Raccoglie tutti i calcoli dagli slave al master
     Body *gatherBuffer = NULL;
-    if (rank == MASTER) {
+    if (rank == MASTER)
+    {
         gatherBuffer = (Body *)malloc(numberOfBodies * sizeof(Body));
     }
-    
+
     MPI_Gatherv(&bodies[displs[rank]], bodiesPerProcess[rank], MPI_BODY,
                 gatherBuffer, bodiesPerProcess, displs, MPI_BODY, MASTER, MPI_COMM_WORLD);
 
-    if (rank == MASTER) {
+    if (rank == MASTER)
+    {
         memcpy(bodies, gatherBuffer, numberOfBodies * sizeof(Body));
         free(gatherBuffer);
     }
@@ -194,7 +148,6 @@ int main(int argc, char **argv)
     free(displs);
     MPI_Type_free(&MPI_BODY);
 
-    // Finalizza l'ambiente MPI
     MPI_Finalize();
 
     return 0;
@@ -254,7 +207,6 @@ void buildBodiesPerProcessAndDispls(int numberOfBodies, int numberOfTasks,
     int bodiesDifference = numberOfBodies / numberOfTasks;
     int startPosition = 0;
 
-    // Si basa sul fatto che il resto è sempre minore del divisore
     for (int process = MASTER; process < numberOfTasks; process++)
     {
         if (rest > BODY_NO_DIFFERENCE)
@@ -275,7 +227,6 @@ void buildBodiesPerProcessAndDispls(int numberOfBodies, int numberOfTasks,
 void printTimeAndBodies(Body *bodies, int numberOfBodies, int numberOfTasks, int iterations,
                         double executionTime, int isExecutionTimeRequired, int isPrintRequired)
 {
-    // Se è richiesto il tempo di esecuzione, allora è la fine del calcolo
     if (isPrintRequired == 1)
     {
         printBodies(bodies, numberOfBodies, numberOfTasks, iterations, isExecutionTimeRequired);
@@ -283,12 +234,12 @@ void printTimeAndBodies(Body *bodies, int numberOfBodies, int numberOfTasks, int
 
     if (isExecutionTimeRequired == 1)
     {
-        printf("Con %d processori, %d corpi e %d iterazioni il tempo di esecuzione è %0.2f secondi\n",
+        printf("With %d processor, %d bodies and %d iterations the time of execution is %0.2f seconds\n",
                numberOfTasks, numberOfBodies, iterations, executionTime);
 
         FILE *file = fopen("./nBodyExecutionTime.txt", "a");
         fprintf(file,
-                "Con %d processori, %d corpi e %d iterazioni il tempo di esecuzione è %0.2f secondi\n\n",
+                "With %d processor, %d bodies and %d iterations the time of execution is %0.2f seconds\n",
                 numberOfTasks, numberOfBodies, iterations, executionTime);
         fclose(file);
     }
@@ -300,18 +251,18 @@ void printBodies(Body *bodies, int numberOfBodies, int numberOfTasks, int iterat
 
     if (isEnd == 1)
     {
-        fprintf(file, "Corpi alla fine con %d processori e %d iterazioni:\n",
+        fprintf(file, "Bodies at the end with %d processors and %d iterations:\n",
                 numberOfTasks, iterations);
     }
     else
     {
-        fprintf(file, "Corpi all'inizio con %d processori e %d iterazioni:\n",
+        fprintf(file, "Bodies at the beginning with %d processors %d iterations:\n",
                 numberOfTasks, iterations);
     }
 
     for (int body = 0; body < numberOfBodies; body++)
     {
-        fprintf(file, "Corpo[%d][%f, %f, %f, %f, %f, %f]\n", body,
+        fprintf(file, "Body[%d][%f, %f, %f, %f, %f, %f]\n", body,
                 bodies[body].x, bodies[body].y, bodies[body].z,
                 bodies[body].vx, bodies[body].vy, bodies[body].vz);
     }
