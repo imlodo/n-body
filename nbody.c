@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
     if (isCorrectlyInvoked != NOT_CORRECTLY_INVOKED) {  
         if (strcmp(argv[PRINT_ARGUMENT], "print") == 0) {
             isPrintRequired = PRINT_REQUIRED;
-        } else if (strcmp(argv[PRINT_ARGUMENT], "-pN") == 0) {
+        } else if (strcmp(argv[PRINT_ARGUMENT], "notPrint") == 0) {
             isPrintRequired = PRINT_NOT_REQUIRED;
         } else {
             isCorrectlyInvoked = NOT_CORRECTLY_INVOKED;
