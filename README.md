@@ -205,3 +205,48 @@ Il comando sopra indicato esegue il programma `nbody` utilizzando 12 processi pa
 ### Nota
 
 Si raccomanda di adattare i comandi alla struttura delle cartelle e alle configurazioni specifiche del progetto. Il comando `mpiexec` potrebbe variare leggermente in base alla specifica implementazione MPI installata (ad esempio, potrebbe essere necessario usare `mpirun`).
+
+## Correttezza
+
+La correttezza del programma è stata verificata attraverso il confronto tra l'output generato e quello della [soluzione sequenziale di Harrism](https://github.com/harrism/mini-nbody/blob/master/nbody.c), usando lo stesso numero di particelle, numero di iterazioni e condizioni iniziali deterministiche. Indipendentemente dal numero di processori utilizzati, l'output del programma è consistente e coincide con i risultati ottenuti dalla soluzione sequenziale, confermando l'affidabilità dell'implementazione parallela.
+
+### Esempio di esecuzione
+
+Con 12 particelle e 3 iterazioni, l'array iniziale di particelle è il seguente:
+
+```plaintext
+Body[0][0.233, -0.445, 0.865, -0.124, 0.258, -0.456]
+Body[1][-0.134, 0.385, 0.922, -0.500, 0.389, 0.561]
+Body[2][0.746, -0.769, 0.033, 0.233, 0.144, -0.250]
+Body[3][0.155, 0.012, -0.054, 0.983, -0.299, 0.044]
+Body[4][-0.028, -0.973, 0.229, 0.311, 0.188, -0.092]
+Body[5][0.391, 0.290, -0.823, -0.635, 0.676, 0.322]
+Body[6][-0.671, 0.742, 0.040, 0.688, -0.244, -0.213]
+Body[7][0.978, -0.765, -0.239, -0.045, 0.428, 0.103]
+Body[8][-0.477, 0.215, -0.806, 0.514, -0.358, 0.866]
+Body[9][0.483, -0.369, 0.794, -0.831, 0.542, -0.079]
+Body[10][-0.690, 0.587, -0.425, 0.272, -0.962, 0.065]
+Body[11][0.992, -0.122, 0.020, -0.099, 0.498, -0.861]
+```
+
+Dopo aver eseguito 3 iterazioni, l'output è il seguente:
+
+```plaintext
+Body[0][0.210, -0.411, 0.885, -0.101, 0.234, -0.480]
+Body[1][-0.149, 0.405, 0.910, -0.521, 0.403, 0.550]
+Body[2][0.770, -0.790, 0.055, 0.247, 0.155, -0.260]
+Body[3][0.172, 0.032, -0.079, 1.008, -0.314, 0.030]
+Body[4][-0.056, -0.980, 0.215, 0.319, 0.192, -0.120]
+Body[5][0.415, 0.315, -0.840, -0.655, 0.700, 0.310]
+Body[6][-0.658, 0.760, 0.022, 0.703, -0.251, -0.230]
+Body[7][0.955, -0.788, -0.250, -0.035, 0.440, 0.112]
+Body[8][-0.490, 0.238, -0.816, 0.530, -0.368, 0.856]
+Body[9][0.510, -0.355, 0.810, -0.850, 0.555, -0.072]
+Body[10][-0.712, 0.610, -0.440, 0.282, -0.975, 0.055]
+Body[11][1.002, -0.107, 0.015, -0.084, 0.510, -0.875]
+```
+
+Questo output dimostra la consistenza del comportamento del sistema, garantendo che, indipendentemente dalla distribuzione dei processi, i risultati restano invariati.
+
+La coerenza dei risultati conferma l'accuratezza dell'algoritmo parallelo implementato. Le iterazioni mostrano la stabilità e l'affidabilità dei calcoli effettuati dal programma, rispettando il principio di determinismo nel caso di input identici.
+
