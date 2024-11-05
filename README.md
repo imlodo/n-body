@@ -265,7 +265,7 @@ La **scalabilità debole** esamina come l'efficienza del sistema varia con l'aum
 1. **Iterazioni Non Costanti**: Abbiamo incrementato il numero di particelle e di iterazioni proporzionalmente al numero di processori. Specificamente, abbiamo utilizzato 1,000 particelle e 10 iterazioni per processore, con un numero di processori che varia da 1 a 32.
 2. **Iterazioni Costanti**: Il carico di lavoro per processore è stato mantenuto costante aumentando il numero di particelle, mentre il numero totale di iterazioni è rimasto fisso a 300. Qui, ogni processore ha gestito 1,000 particelle.
 
-![image](https://github.com/user-attachments/assets/25e37565-d90b-4388-8de2-359c1b120e51)
+![image](https://github.com/user-attachments/assets/b270dffb-6544-4a89-a51b-f4abe9505ef3)
 
 
 ### Configurazione Hardware
