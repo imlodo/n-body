@@ -250,3 +250,40 @@ Questo output dimostra la consistenza del comportamento del sistema, garantendo 
 
 La coerenza dei risultati conferma l'accuratezza dell'algoritmo parallelo implementato. Le iterazioni mostrano la stabilità e l'affidabilità dei calcoli effettuati dal programma, rispettando il principio di determinismo nel caso di input identici.
 
+## Benchmark
+
+Il programma è stato sottoposto a test approfonditi per valutare la scalabilità forte e debole. Questi test sono stati ripetuti più volte per garantire la riproducibilità dei risultati, e i valori presentati sono medie dei risultati ottenuti.
+
+### Scalabilità Forte
+La **scalabilità forte** si riferisce alla capacità del sistema di mantenere un tempo di esecuzione costante nonostante l'aumento del numero di processori, mantenendo inalterata la dimensione totale del problema. In questi test, abbiamo fissato il numero di particelle mentre incrementavamo il numero di processori. Specificatamente, abbiamo utilizzato 15,000 particelle e 500 iterazioni, variando il numero di processori da 1 a 32.
+
+![image](https://github.com/user-attachments/assets/2a5f34fa-8e84-46d0-83d0-c97155683a2b)
+
+### Scalabilità Debole
+La **scalabilità debole** esamina come l'efficienza del sistema varia con l'aumento del numero di processori, quando la dimensione del problema per processore rimane costante. Abbiamo condotto due tipi di test per la scalabilità debole:
+
+1. **Iterazioni Non Costanti**: Abbiamo incrementato il numero di particelle e di iterazioni proporzionalmente al numero di processori. Specificamente, abbiamo utilizzato 1,000 particelle e 10 iterazioni per processore, con un numero di processori che varia da 1 a 32.
+2. **Iterazioni Costanti**: Il carico di lavoro per processore è stato mantenuto costante aumentando il numero di particelle, mentre il numero totale di iterazioni è rimasto fisso a 300. Qui, ogni processore ha gestito 1,000 particelle.
+
+![image](https://github.com/user-attachments/assets/25e37565-d90b-4388-8de2-359c1b120e51)
+
+
+### Configurazione Hardware
+I test sono stati eseguiti utilizzando un cluster di 8 macchine t2.xlarge su AWS Educate, con le seguenti specifiche per ogni macchina:
+
+- **Modello**: t2.xlarge
+- **vCPU**: 4
+- **Memoria**: 16 GiB
+- **Storage**: Solo EBS
+
+Questo setup sfrutta il limite massimo di vCPU consentito da AWS Educate, permettendo un totale di 32 vCPU distribuite sulle macchine virtuali in esecuzione.
+
+![image](https://github.com/user-attachments/assets/2c50758e-18b8-4604-a3bd-9f06f88c6af8)
+
+
+### Speedup
+Lo **speedup** è stato calcolato confrontando i tempi di esecuzione del programma eseguito su un singolo processore con quelli ottenuti utilizzando un numero crescente di processori, da 2 a 32. Questa metrica mostra l'efficacia del parallelismo nel ridurre il tempo di calcolo.
+
+![image](https://github.com/user-attachments/assets/3fa964db-17b7-4f43-85f5-764362fe9659)
+
+Questi test hanno fornito dati cruciali sulla capacità del programma di gestire carichi di lavoro intensivi in un ambiente distribuito, evidenziando l'efficienza e le potenzialità della soluzione proposta per computazioni parallele su larga scala.
