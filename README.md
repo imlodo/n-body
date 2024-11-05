@@ -19,4 +19,24 @@ Il programma per risolvere il problema N-Body simula le interazioni fisiche tra 
 
 ### Descrizione Soluzione
 
+Come punto di partenza si è adottata una soluzione quadraticamente dipendente dal numero di particelle. Per la componente matematica del calcolo delle forze, il programma fa riferimento alla soluzione sequenziale di Harris, disponibile qui: [soluzione n-body di Harris](https://github.com/harrism/mini-nbody/blob/master/nbody.c).
+
+Il programma è progettato per simulare la dinamica di un numero specificato di corpi \( <body_count> \) per un determinato numero di iterazioni \( <iterations> \). Il processo MASTER inizializza casualmente un array di corpi in base agli input e distribuisce una porzione di questo array a ciascuno dei processi SLAVE \( <processors_count>-1 \), assegnando loro la responsabilità di quel segmento.
+
+Sia il MASTER che ogni SLAVE contribuiscono al carico di lavoro computazionale, simulando le forze che agiscono sul sottoinsieme di particelle di loro competenza. Una volta completati i calcoli per tutte le iterazioni specificate, ogni SLAVE invia i propri risultati al MASTER.
+
+Per l'inizializzazione è stato impiegato un algoritmo deterministico per garantire una distribuzione casuale delle configurazioni dei corpi.
+
+**Sinossi del codice**:
+- Vengono definiti costanti come il fattore di ammorbidimento, il delta temporale e il seme casuale per la coerenza della simulazione.
+- La funzione `main` inizia con l'impostazione dell'ambiente MPI, la validazione degli input e l'inizializzazione dei corpi.
+- Viene creato e confermato il tipo di dato MPI per le strutture dei corpi.
+- La funzione `randomizeBodies` genera posizioni e velocità iniziali per i corpi.
+- La funzione `bodyForce` calcola le forze gravitazionali tra i corpi.
+- Le posizioni sono aggiornate in base alle forze calcolate nella funzione `updatePositions`.
+- Le operazioni collettive di MPI (`MPI_Scatterv`, `MPI_Gatherv` e `MPI_Ibcast`) gestiscono la distribuzione e la raccolta dei dati tra i processi.
+- I tempi e gli stati finali dei corpi possono essere stampati se specificato, con opzioni controllate tramite argomenti da linea di comando.
+
+L'implementazione mira a un'esecuzione parallela efficiente utilizzando MPI, concentrando l'attenzione sulla corretta gestione della memoria e minimizzando il sovraccarico di comunicazione tra i processi.
+
 ### Implementazione Soluzione
