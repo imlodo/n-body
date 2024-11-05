@@ -144,3 +144,64 @@ void updatePositions(Body *bodies, float dt, int start, int stop) {
     }
 }
 ```
+## Esecuzione
+
+### Prerequisiti
+
+Prima di procedere con il download e l'esecuzione del progetto, è necessario assicurarsi che i seguenti strumenti siano installati sul sistema:
+
+- GCC (GNU Compiler Collection)
+- CMake
+- MPI (implementazione specifica come OpenMPI o MPICH)
+
+Questi componenti possono essere installati attraverso il gestore di pacchetti della distribuzione Linux utilizzata. Per esempio, su sistemi basati su Ubuntu, si può utilizzare il seguente comando:
+
+```bash
+sudo apt-get install build-essential cmake mpich
+```
+
+### Download del progetto
+
+Per scaricare il progetto, l'utente deve clonare il repository GitHub utilizzando il comando:
+
+```bash
+git clone https://github.com/imlodo/n-body
+```
+
+### Compilazione del progetto
+
+Dopo aver clonato il repository, si deve navigare nella directory del progetto e seguire i passaggi per compilare il codice:
+
+1. **Creazione di una cartella build**: è raccomandato creare una cartella build per mantenere separati i file sorgente dai file di compilazione:
+
+   ```bash
+   mkdir build
+   cd build
+   ```
+
+2. **Configurazione del progetto con CMake**: questo passaggio genera i Makefiles necessari per la compilazione:
+
+   ```bash
+   cmake ..
+   ```
+
+3. **Compilazione del progetto**: questo comando costruisce effettivamente l'eseguibile:
+
+   ```bash
+   cmake --build .
+   ```
+
+### Esecuzione del programma
+
+Una volta compilato il progetto, l'eseguibile può essere eseguito con MPI. È importante navigare nella cartella che contiene l'eseguibile, che potrebbe trovarsi direttamente nella cartella `build` o in una sottocartella come `Debug`, a seconda della configurazione di CMake.
+
+```bash
+cd Debug  # Modificare questo passaggio se la cartella di destinazione è diversa
+mpiexec -np 12 ./nbody print 10500 100
+```
+
+Il comando sopra indicato esegue il programma `nbody` utilizzando 12 processi paralleli. Il programma simula 10500 corpi per 100 iterazioni e stampa i risultati.
+
+### Nota
+
+Si raccomanda di adattare i comandi alla struttura delle cartelle e alle configurazioni specifiche del progetto. Il comando `mpiexec` potrebbe variare leggermente in base alla specifica implementazione MPI installata (ad esempio, potrebbe essere necessario usare `mpirun`).
