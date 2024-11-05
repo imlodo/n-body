@@ -39,4 +39,108 @@ Per l'inizializzazione è stato impiegato un algoritmo deterministico per garant
 
 L'implementazione mira a un'esecuzione parallela efficiente utilizzando MPI, concentrando l'attenzione sulla corretta gestione della memoria e minimizzando il sovraccarico di comunicazione tra i processi.
 
-### Implementazione Soluzione
+## Dettagli dell'implementazione
+
+### Definizione della struttura per ogni particella
+
+La rappresentazione di ogni particella è definita attraverso una struttura `Body`, che comprende le coordinate spaziali \(x, y, z\) e le componenti di velocità \(vx, vy, vz\):
+
+```c
+typedef struct { 
+    float x, y, z, vx, vy, vz; 
+} Body;
+```
+
+### Inizializzazione
+
+L'inizializzazione dell'array di corpi viene eseguita tramite la funzione `randomizeBodies`, che assegna valori casuali alle coordinate e alle velocità dei corpi. La funzione utilizza `rand()` per generare numeri casuali normalizzati tra -1 e 1:
+
+```c
+void randomizeBodies(float *bodies, int numberOfBodies) {
+    for (int body = 0; body < numberOfBodies; body++)
+        bodies[body] = 2.0f * (rand() / (float)RAND_MAX) - 1.0f;
+}
+```
+
+La memoria per l'array di `Body` viene allocata come segue, con un casting esplicito del buffer di tipo `float` alla struttura `Body`:
+
+```c
+int bytes = numberOfBodies * sizeof(Body);
+float *buffer = (float*) malloc(bytes);
+Body *bodies = (Body*) buffer;
+```
+
+### Definizione di un tipo MPI per la struttura
+
+Per facilitare le operazioni di comunicazione MPI con la struttura `Body`, viene creato un tipo di dato derivato MPI:
+
+```c
+MPI_Datatype MPI_BODY;
+MPI_Datatype oldTypes[1] = {MPI_FLOAT};
+int blocksCount[1] = {BODY_FLOAT}; // BODY_FLOAT = 6, corrispondente ai componenti di Body
+MPI_Aint offset[1] = {0};
+
+MPI_Type_create_struct(1, blocksCount, offset, oldTypes, &MPI_BODY);
+MPI_Type_commit(&MPI_BODY);
+```
+
+Dopo l'uso, il tipo viene liberato con `MPI_Type_free()`:
+
+```c
+MPI_Type_free(&MPI_BODY);
+```
+
+### Distribuzione dei dati ai processi
+
+La distribuzione iniziale dei corpi ai vari processi avviene tramite `buildBodiesPerProcessAndDispls()`, che calcola come dividere equamente i corpi fra i processi, considerando anche il caso in cui il numero di corpi non sia divisibile uniformemente:
+
+```c
+void buildBodiesPerProcessAndDispls(int numberOfBodies, int numberOfTasks, int *bodiesPerProcess, int *displs) {
+    int rest = numberOfBodies % numberOfTasks;
+    int bodiesDifference = numberOfBodies / numberOfTasks;
+    int startPosition = 0;
+
+    for (int process = MASTER; process < numberOfTasks; process++) {
+        bodiesPerProcess[process] = (rest > 0) ? (bodiesDifference + 1) : bodiesDifference;
+        rest--;
+        displs[process] = startPosition;
+        startPosition += bodiesPerProcess[process];
+    }
+}
+```
+
+### Comunicazione e calcolo delle forze
+
+Durante la simulazione, ciascun processo calcola le forze agendo sui corpi di sua competenza e aggiorna le posizioni. La comunicazione delle posizioni aggiornate fra i processi avviene utilizzando `MPI_Ibcast()`, e il calcolo delle forze e l'aggiornamento delle posizioni sono gestiti rispettivamente dalle funzioni `bodyForce()` e `updatePositions()`.
+
+Le forze vengono calcolate tenendo conto della distanza fra i corpi, usando un fattore di ammorbidimento per evitare divisioni per zero:
+
+```c
+void bodyForce(Body *bodies, float dt, int dependentStart, int dependentStop, int independentStart, int independentStop) {
+    for (int i = independentStart; i < independentStop; i++) {
+        float Fx = 0.0f, Fy = 0.0f, Fz = 0.0f;
+        for (int j = dependentStart; j < dependentStop; j++) {
+            float dx = bodies[j].x - bodies[i].x, dy = bodies[j].y - bodies[i].y, dz = bodies[j].z - bodies[i].z;
+            float distSqr = dx*dx + dy*dy + dz*dz + SOFTENING;
+            float invDist = 1.0f / sqrt(distSqr);
+            float invDist3 = invDist * invDist * invDist;
+            Fx += dx * invDist3; Fy += dy * invDist3; Fz += dz * invDist3;
+        }
+        bodies[i].vx += dt * Fx;
+        bodies[i].vy += dt * Fy;
+        bodies[i].vz += dt * Fz;
+    }
+}
+```
+
+Infine, le posizioni dei corpi vengono aggiornate in base alle velocità:
+
+```c
+void updatePositions(Body *bodies, float dt, int start, int stop) {
+    for (int body = start; body < stop; body++) {
+        bodies[body].x += bodies[body].vx * dt;
+        bodies[body].y += bodies[body].vy * dt;
+        bodies[body].z += bodies[body].vz * dt;
+    }
+}
+```
