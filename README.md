@@ -262,7 +262,7 @@ La **scalabilità forte** si riferisce alla capacità del sistema di mantenere u
 ### Scalabilità Debole
 La **scalabilità debole** esamina come l'efficienza del sistema varia con l'aumento del numero di processori, quando la dimensione del problema per processore rimane costante. Abbiamo condotto due tipi di test per la scalabilità debole:
 
-1. **Iterazioni Non Costanti**: Abbiamo incrementato il numero di particelle e di iterazioni proporzionalmente al numero di processori. Specificamente, abbiamo utilizzato 1,000 particelle e 10 iterazioni per processore, con un numero di processori che varia da 1 a 32.
+1. **Iterazioni Non Costanti**: Abbiamo incrementato il numero di particelle e di iterazioni proporzionalmente al numero di processori. Specificamente, abbiamo utilizzato 1,000 particelle e 10 iterazioni per processore, con un numero di processori che varia da 1 a 32. Es. se i processori sono 2 abbiamo 2,000 particelle e 20 iterazioni e così via.
 2. **Iterazioni Costanti**: Il carico di lavoro per processore è stato mantenuto costante aumentando il numero di particelle, mentre il numero totale di iterazioni è rimasto fisso a 300. Qui, ogni processore ha gestito 1,000 particelle.
 
 ![image](https://github.com/user-attachments/assets/b270dffb-6544-4a89-a51b-f4abe9505ef3)
